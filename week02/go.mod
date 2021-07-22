@@ -1,4 +1,4 @@
-module github.com/dch1228/geekbanggo/week2
+module github.com/dch1228/geekbanggo/week02
 
 go 1.15
 

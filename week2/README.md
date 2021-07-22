@@ -1,1 +1,0 @@
-- 不应该在dao层wrap err，如果调用逻辑是 handler->logic->dao, 应该在handler层处理err, 因为err只应该被处理一次
