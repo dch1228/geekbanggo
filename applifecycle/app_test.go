@@ -24,7 +24,7 @@ func TestStartFailed(t *testing.T) {
 	app.Run()
 }
 
-func TestSignShutdown(t *testing.T) {
+func TestSignalShutdown(t *testing.T) {
 	servers := []*Server{
 		{
 			Name:       "api1",
