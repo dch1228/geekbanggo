@@ -1,4 +1,4 @@
-module github.com/dch1228/geekbanggo/week02
+module github.com/dch1228/gobestpractices/wraperr
 
 go 1.15
 
