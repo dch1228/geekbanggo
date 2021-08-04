@@ -13,14 +13,31 @@ type Todo struct {
 	Title string
 }
 
-func daoGetTodoById(id string) (*Todo, error) {
-	// 模拟 ErrNoRows
-	err := sql.ErrNoRows
-	// 在此处wrap err
-	return nil, errors.Wrapf(err, "daoGetTodoByIdErr, id: %s", id)
+// dao 层
+func daoGetTodoById(id string) (out *Todo, err error) {
+	// 根据id模拟一些错误
+	switch id {
+	case "0":
+		err = sql.ErrNoRows
+	case "1":
+		err = sql.ErrConnDone
+	default:
+		out = &Todo{
+			Id:    id,
+			Title: "",
+		}
+	}
+
+	if err != nil {
+		// wrap err
+		return nil, errors.Wrapf(err, "daoGetTodoByIdErr, id: %s", id)
+	}
+
+	return out, nil
 }
 
-func logicGetTodoById(id string) (*Todo, error) {
+// service 层
+func serviceGetTodoById(id string) (*Todo, error) {
 	todo, err := daoGetTodoById(id)
 	if err != nil {
 		return nil, err
@@ -28,14 +45,25 @@ func logicGetTodoById(id string) (*Todo, error) {
 	return todo, nil
 }
 
+// handler 层
 func handlerGetTodoById(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	todo, err := logicGetTodoById(id)
+	todo, err := serviceGetTodoById(id)
 	if err != nil {
-		// 在handler层处理err可以看到具体的错误堆栈
-		fmt.Printf("%+v\n", err)
-		ctx.AbortWithStatus(400)
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(404, gin.H{
+				"code": 404,
+				"msg":  "todo not found",
+			})
+		} else {
+			// 其他错误需要记录日志
+			fmt.Printf("%+v\n", err)
+			ctx.JSON(500, gin.H{
+				"code": 500,
+				"msg":  "internal error",
+			})
+		}
 		return
 	}
 	ctx.JSON(200, todo)
