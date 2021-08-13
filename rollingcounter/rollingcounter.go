@@ -52,7 +52,7 @@ func (rw *RollingCounter) Reduce(fn func(b int)) {
 	}
 }
 
-// span 返回距离上次 add 过了几个 interval
+// span 返回距离上次 add 过了几个 interval，也就是过期桶的数量
 func (rw *RollingCounter) span() int {
 	offset := int(time.Since(rw.lastTime) / rw.interval)
 	if offset < rw.size {
@@ -64,22 +64,20 @@ func (rw *RollingCounter) span() int {
 
 func (rw *RollingCounter) updateOffset() {
 	span := rw.span()
+	// 等于0表示没有过期，不需要重置
 	if span <= 0 {
 		return
 	}
 
-	// span 数量等于需要重置桶的个数
-	// offset 是上次 add 的位置
-	// 由于数环形数据，所以 offset 的下一个是最老的数据
+	// offset + 1 是最旧数据的位置
 	// 从 offset + 1 开始，重置 span 个桶
 	offset := rw.offset
 	for i := 0; i < span; i++ {
 		rw.reset((offset + i + 1) % rw.size)
 	}
 
-	// 计算出当前偏移量
+	// 计算出当前偏移量，并更新时间
 	rw.offset = (offset + span) % rw.size
-	// 更新上次时间
 	rw.lastTime = rw.lastTime.Add(time.Duration(span * int(rw.interval)))
 }
 
